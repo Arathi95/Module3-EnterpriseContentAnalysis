@@ -6,24 +6,41 @@ load_dotenv()
 
 analyzer = ContentAnalyzer()
 
+st.set_page_config(layout="wide")
+
 st.title("Enterprise Content Analysis Platform")
 
-uploaded_file = st.file_uploader("Upload a business document", type=["txt", "md"])
+col1, col2 = st.columns(2)
 
-if uploaded_file is not None:
-    content = uploaded_file.read().decode("utf-8")
-    st.text_area("Content", content, height=300)
+with col1:
+    st.subheader("Enter Content to Analyze")
+    content_input = st.text_area("Paste your content here", height=400)
+    
+    analyze_button = st.button("Analyze Content")
 
-    if st.button("Analyze Content"):
-        with st.spinner("Analyzing..."):
-            analysis = analyzer.analyze_content(content)
-            st.subheader("Analysis")
-            if "error" in analysis:
-                st.error(analysis["error"])
-            else:
-                st.write(f"**Sentiment:** {analysis.get('sentiment', 'N/A')}")
-                st.subheader("Summary")
-                st.write(analysis.get('summary', 'No summary provided.'))
-                st.subheader("Key Points")
-                for point in analysis.get('key_points', []):
-                    st.write(f"- {point}")
+with col2:
+    st.subheader("Analysis Results")
+    if analyze_button:
+        if content_input:
+            with st.spinner("Analyzing..."):
+                analysis = analyzer.analyze_content(content_input)
+                
+                st.markdown("---")
+                
+                if "error" in analysis:
+                    st.error(analysis["error"])
+                else:
+                    st.write(f"**Sentiment:** {analysis.get('sentiment', 'N/A')}")
+                    
+                    st.subheader("Summary")
+                    st.info(analysis.get('summary', 'No summary provided.'))
+                    
+                    st.subheader("Key Points")
+                    for point in analysis.get('key_points', []):
+                        st.success(f"- {point}")
+
+                    st.markdown("---")
+                    st.subheader("API Cost Estimate")
+                    st.warning("$0.05")
+        else:
+            st.warning("Please paste some content to analyze.")

@@ -10,6 +10,15 @@ This file tracks the setup and execution for the Enterprise Content Analysis Pla
 - `.env.example`: Example environment file for API keys.
 - `Gemini.md`: This file.
 
+## Features
+
+- **Professional Title**: The application has a professional title "Enterprise Content Analysis Platform".
+- **Content Input**: A text area is provided for users to paste the content they want to analyze.
+- **Analyze Button**: An "Analyze" button initiates the content analysis process.
+- **Formatted Results**: The analysis results are displayed in a clean and organized format.
+- **Cost Estimation**: The application shows an estimated cost of $0.05 for each analysis.
+- **Layout**: The application uses a two-column layout for a better user experience.
+
 ## Setup Instructions
 
 ### 1. Create Virtual Environment and Install Dependencies
