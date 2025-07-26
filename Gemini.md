@@ -2,6 +2,14 @@
 
 This file tracks the setup and execution for the Enterprise Content Analysis Platform.
 
+## Project Structure
+
+- `app.py`: The main Streamlit application.
+- `src/content_analyzer.py`: Contains the `ContentAnalyzer` class for interacting with the OpenAI API.
+- `requirements.txt`: Project dependencies.
+- `.env.example`: Example environment file for API keys.
+- `Gemini.md`: This file.
+
 ## Setup Instructions
 
 ### 1. Create Virtual Environment and Install Dependencies

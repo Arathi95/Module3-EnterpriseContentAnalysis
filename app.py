@@ -1,9 +1,10 @@
 import streamlit as st
 from dotenv import load_dotenv
-import os
-from src.content_analyzer import analyze_content
+from src.content_analyzer import ContentAnalyzer
 
 load_dotenv()
+
+analyzer = ContentAnalyzer()
 
 st.title("Enterprise Content Analysis Platform")
 
@@ -15,6 +16,14 @@ if uploaded_file is not None:
 
     if st.button("Analyze Content"):
         with st.spinner("Analyzing..."):
-            analysis = analyze_content(content)
+            analysis = analyzer.analyze_content(content)
             st.subheader("Analysis")
-            st.write(analysis)
+            if "error" in analysis:
+                st.error(analysis["error"])
+            else:
+                st.write(f"**Sentiment:** {analysis.get('sentiment', 'N/A')}")
+                st.subheader("Summary")
+                st.write(analysis.get('summary', 'No summary provided.'))
+                st.subheader("Key Points")
+                for point in analysis.get('key_points', []):
+                    st.write(f"- {point}")
