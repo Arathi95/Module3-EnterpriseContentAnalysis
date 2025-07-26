@@ -144,6 +144,11 @@ class ContentAnalyzer:
                 temperature=0.3
             )
             analysis = json.loads(response.choices[0].message.content)
+            analysis['usage'] = {
+                'prompt_tokens': response.usage.prompt_tokens,
+                'completion_tokens': response.usage.completion_tokens,
+                'total_tokens': response.usage.total_tokens
+            }
             return analysis
         except Exception as e:
             return {"error": f"An error occurred: {e}"}

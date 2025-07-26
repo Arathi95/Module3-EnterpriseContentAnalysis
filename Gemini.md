@@ -7,34 +7,40 @@ This file tracks the setup and execution for the Enterprise Content Analysis Pla
 - `app.py`: The main Streamlit application.
 - `src/content_analyzer.py`: Contains the `ContentAnalyzer` class for interacting with the OpenAI API.
 - `src/document_processor.py`: Handles file processing for various formats.
+- `src/cost_tracker.py`: Tracks API usage and costs.
 - `requirements.txt`: Project dependencies.
 - `.env.example`: Example environment file for API keys.
 - `Gemini.md`: This file.
 
-## Features
+# Gemini.md
 
-- **Professional Title**: The application has a professional title "Enterprise Content Analysis Platform".
-- **File Upload for Content**: A file uploader allows users to drag and drop files (TXT, MD, PDF, DOCX) for analysis, replacing the manual text input.
-- **Advanced Document Processing**:
-  - Handles PDF, DOCX, and TXT file formats.
-  - Extracts and cleans text from documents.
-  - Optimizes content length to a maximum of 3000 tokens using `tiktoken` to manage API costs.
-  - Provides document metadata, including file type, size, and token count.
-- **Analyze Button**: An "Analyze" button initiates the content analysis process.
-- **Formatted Results**: The analysis results are displayed in a clean and organized format.
-- **Cost Estimation**: The application shows an estimated cost of $0.05 for each analysis.
-- **Layout**: The application uses a two-column layout for a better user experience.
-- **Advanced Prompt Engineering**:
-  - **Persona-Driven Analysis**: Utilizes a senior business analyst persona (SYSTEM_PROMPT) for high-quality, insightful analysis.
-  - **Structured JSON Output**: Returns a detailed JSON object with a predefined ANALYSIS_TEMPLATE.
-  - **Consistent Output**: The temperature is set to 0.3 to ensure consistent analysis results.
-- **Multi-Type Analysis**:
-  - **Analysis Type Selection**: A dropdown menu allows users to select from different analysis types (General Business, Competitive Intelligence, Customer Feedback).
-  - **Custom Prompt Templates**: Each analysis type uses a specialized prompt template to guide the AI for targeted insights.
-  - **Dynamic Output Rendering**: The application dynamically adjusts to display the structured results for the selected analysis type.
+## Streamlit App Features (as of July 2025)
 
-## Setup Instructions
+### File Upload Support
+- Users can upload PDF, DOCX, or TXT files for analysis.
+- After upload, the app displays:
+  - File type
+  - File size (in bytes)
+  - Token count (using tiktoken)
+  - Estimated cost for analysis
 
+### Document Processing
+- Uploaded files are processed using the `DocumentProcessor` class.
+- Only supported file types (.pdf, .docx, .txt) are accepted.
+- If an unsupported file type is uploaded, a clear error message is shown to the user.
+
+### Cost Tracking
+- The sidebar displays:
+  - Daily cost and remaining budget
+  - Monthly cost and remaining budget
+- Cost is estimated before analysis and tracked after analysis using `CostTracker`.
+
+### Error Handling
+- Errors during file processing (including unsupported file types) are caught and shown as user-friendly messages.
+
+### Recommendations for Future Updates
+- If new file types are supported, update both the UI and `DocumentProcessor`.
+- Keep this file updated with any new user-facing features or error handling improvements.
 ### 1. Create Virtual Environment and Install Dependencies
 
 ```bash

@@ -2,14 +2,22 @@ import streamlit as st
 from dotenv import load_dotenv
 from src.content_analyzer import ContentAnalyzer, ANALYSIS_TEMPLATES
 from src.document_processor import DocumentProcessor
+from src.cost_tracker import CostTracker
 import os
 
 load_dotenv()
 
 analyzer = ContentAnalyzer()
-
+cost_tracker = CostTracker()
 
 st.set_page_config(layout="wide")
+
+st.sidebar.title("Budget Tracker")
+daily_usage = cost_tracker.get_daily_usage()
+monthly_usage = cost_tracker.get_monthly_usage()
+st.sidebar.metric(label="Daily Cost", value=f"${daily_usage['cost']:.2f}", delta=f"${cost_tracker.daily_limit - daily_usage['cost']:.2f} remaining")
+st.sidebar.metric(label="Monthly Cost", value=f"${monthly_usage['cost']:.2f}", delta=f"${cost_tracker.monthly_limit - monthly_usage['cost']:.2f} remaining")
+
 
 st.title("Enterprise Content Analysis Platform")
 
@@ -23,34 +31,62 @@ with col1:
     )
     uploaded_file = st.file_uploader("Drag and drop your file here", type=['txt', 'md', 'pdf', 'docx'])
     
+    content_input = None
+    if uploaded_file is not None:
+        try:
+            # Save the uploaded file temporarily
+            with open(uploaded_file.name, "wb") as f:
+                f.write(uploaded_file.getbuffer())
+
+            # Check supported file types before processing
+            ext = os.path.splitext(uploaded_file.name)[1].lower()
+            if ext not in [".pdf", ".docx", ".txt"]:
+                st.error(f"Unsupported file type: {ext}. Please upload a PDF, DOCX, or TXT file.")
+                os.remove(uploaded_file.name)
+                content_input = None
+            else:
+                processor = DocumentProcessor(uploaded_file.name)
+                processed_data = processor.process()
+                content_input = processed_data["text"]
+                metadata = processed_data["metadata"]
+
+                st.info(f"File Type: {metadata['file_type']} | File Size: {metadata['file_size']} bytes | Token Count: {metadata['token_count']}")
+
+                # Estimate cost
+                input_tokens = metadata['token_count']
+                output_tokens = 2048  # A reasonable estimate for the output
+                estimated_cost = (input_tokens / 1_000_000) * cost_tracker.input_cost_per_million + \
+                                 (output_tokens / 1_000_000) * cost_tracker.output_cost_per_million
+                st.warning(f"Estimated cost for this analysis: ${estimated_cost:.4f}")
+
+                os.remove(uploaded_file.name)
+
+        except Exception as e:
+            st.error(f"Error processing file: {e}")
+            content_input = None
+
     analyze_button = st.button("Analyze Content")
 
 with col2:
     st.subheader("Analysis Results")
-    if analyze_button and uploaded_file is not None:
-        # Save the uploaded file temporarily
-        with open(uploaded_file.name, "wb") as f:
-            f.write(uploaded_file.getbuffer())
+    if analyze_button and uploaded_file is not None and content_input is not None:
+        can_afford, reason = cost_tracker.can_afford_analysis(input_tokens, output_tokens)
 
-        processor = DocumentProcessor(uploaded_file.name)
-        processed_data = processor.process()
-        content_input = processed_data["text"]
-        metadata = processed_data["metadata"]
-
-        st.info(f"File Type: {metadata['file_type']} | File Size: {metadata['file_size']} bytes | Token Count: {metadata['token_count']}")
-
-        os.remove(uploaded_file.name)
-
-        if content_input:
+        if not can_afford:
+            st.error(f"Analysis cannot proceed: {reason}")
+        else:
             with st.spinner("Analyzing..."):
                 analysis = analyzer.analyze_content(content_input, analysis_type)
+                
+                # Record actual usage
+                if "usage" in analysis:
+                    cost_tracker.record_usage(analysis['usage']['prompt_tokens'], analysis['usage']['completion_tokens'])
                 
                 st.markdown("---")
                 
                 if "error" in analysis:
                     st.error(analysis["error"])
                 else:
-                    # ... (rest of the code for displaying results)
                     if analysis_type == "General Business":
                         st.subheader("Executive Summary")
                         st.info(analysis.get("executive_summary", "Not available."))
@@ -140,5 +176,5 @@ with col2:
 
                     with st.expander("View Raw JSON Analysis"):
                         st.json(analysis)
-        else:
-            st.warning("Please upload a file to analyze.")
+    elif analyze_button:
+        st.warning("Please upload a file to analyze.")
