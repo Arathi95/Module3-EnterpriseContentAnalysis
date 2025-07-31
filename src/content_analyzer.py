@@ -108,11 +108,12 @@ class ContentAnalyzer:
         """
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
+
+
     def analyze_content(self, text: str, analysis_type: str) -> dict:
         """
         Analyzes the given text using GPT-4o-mini and returns a structured analysis
         based on the selected analysis type.
-
         Args:
             text: The content to analyze.
             analysis_type: The type of analysis to perform.
@@ -120,6 +121,79 @@ class ContentAnalyzer:
         Returns:
             A dictionary containing the detailed business analysis.
         """
+        if analysis_type not in ANALYSIS_TEMPLATES:
+            return {"error": "Invalid analysis type selected."}
+
+        template = ANALYSIS_TEMPLATES[analysis_type]
+
+        prompt = (
+            f"Please perform a '{analysis_type}' analysis on the following document. "
+            f"Based on your expertise, populate the fields in this JSON structure:\n\n"
+            f"{json.dumps(template, indent=2)}\n\n"
+            f"Document to Analyze:\n"
+            f"---------------------\n"
+            f"{text}"
+        )
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                response_format={"type": "json_object"},
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.3
+            )
+            analysis = json.loads(response.choices[0].message.content)
+            analysis['usage'] = {
+                'prompt_tokens': response.usage.prompt_tokens,
+                'completion_tokens': response.usage.completion_tokens,
+                'total_tokens': response.usage.total_tokens
+            }
+            return analysis
+        except Exception as e:
+            return {"error": f"An error occurred: {e}"}
+
+    def batch_analyze(self, documents, analysis_type, progress_callback=None):
+        """
+        Processes a batch of documents with progress tracking, rate limiting, and error handling.
+
+        Args:
+            documents (list): List of dicts, each with at least 'id' and 'text' keys.
+            analysis_type (str): The type of analysis to perform.
+            progress_callback (callable, optional): Function accepting progress (0.0-1.0) for UI updates.
+
+        Returns:
+            list: List of dicts with 'id', 'timestamp', 'result', and 'error' (if any).
+        """
+        import time
+        from datetime import datetime
+
+        results = []
+        total = len(documents)
+        for idx, doc in enumerate(documents):
+            doc_id = doc.get('id', idx)
+            text = doc.get('text', '')
+            timestamp = datetime.utcnow().isoformat()
+            try:
+                result = self.analyze_content(text, analysis_type)
+                error = result.get('error')
+            except Exception as e:
+                result = None
+                error = str(e)
+            results.append({
+                'id': doc_id,
+                'timestamp': timestamp,
+                'result': result if not error else None,
+                'error': error
+            })
+            # Progress bar update
+            if progress_callback:
+                progress_callback((idx + 1) / total)
+            # Rate limiting
+            if idx < total - 1:
+                time.sleep(0.5)
+        return results
         if analysis_type not in ANALYSIS_TEMPLATES:
             return {"error": "Invalid analysis type selected."}
 
