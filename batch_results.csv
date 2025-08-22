@@ -1,0 +1,5 @@
+Document,Type,Sentiment,Business Impact,Confidence,Cost,Content Type
+strategic_planning_market_expansion.txt,Customer Feedback,Positive,"High, High",0.7,0.0021675,"General Praise, Usability Issue"
+competitor_analysis_fintech.txt,Customer Feedback,Negative,"High, High, Medium",-0.6,0.001993,"Usability Issue, Pricing Concern"
+customer_feedback_airline_negative.txt,Customer Feedback,Negative,"High, High, High",-1.0,0.0013974999999999999,Detailed Complaint
+customer_feedback_mixed_product.txt,Customer Feedback,Mixed,"High, Medium, High, Medium, Low",0.6,0.00175,Product Review

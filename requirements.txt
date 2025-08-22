@@ -1,7 +1,9 @@
+python-dotenv
 openai
 streamlit
-python-dotenv
 PyPDF2
 python-docx
 tiktoken
 plotly
+pandas
+reportlab

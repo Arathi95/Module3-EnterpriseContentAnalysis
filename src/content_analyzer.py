@@ -194,35 +194,3 @@ class ContentAnalyzer:
             if idx < total - 1:
                 time.sleep(0.5)
         return results
-        if analysis_type not in ANALYSIS_TEMPLATES:
-            return {"error": "Invalid analysis type selected."}
-
-        template = ANALYSIS_TEMPLATES[analysis_type]
-
-        prompt = (
-            f"Please perform a '{analysis_type}' analysis on the following document. "
-            f"Based on your expertise, populate the fields in this JSON structure:\n\n"
-            f"{json.dumps(template, indent=2)}\n\n"
-            f"Document to Analyze:\n"
-            f"---------------------\n"
-            f"{text}"
-        )
-        try:
-            response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
-                response_format={"type": "json_object"},
-                messages=[
-                    {"role": "system", "content": SYSTEM_PROMPT},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=0.3
-            )
-            analysis = json.loads(response.choices[0].message.content)
-            analysis['usage'] = {
-                'prompt_tokens': response.usage.prompt_tokens,
-                'completion_tokens': response.usage.completion_tokens,
-                'total_tokens': response.usage.total_tokens
-            }
-            return analysis
-        except Exception as e:
-            return {"error": f"An error occurred: {e}"}
