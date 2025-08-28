@@ -16,7 +16,7 @@ class CostTracker:
         try:
             with open(self.usage_file, 'r') as f:
                 return json.load(f)
-        except FileNotFoundError:
+        except (FileNotFoundError, json.JSONDecodeError):
             return {}
 
     def _save_usage_data(self):

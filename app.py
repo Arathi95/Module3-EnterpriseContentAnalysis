@@ -15,9 +15,13 @@ cost_tracker = CostTracker()
 
 st.set_page_config(layout="wide")
 
+# --- Initialize session state for usage data ---
+if "daily_usage" not in st.session_state:
+    st.session_state.daily_usage = cost_tracker.get_daily_usage()
+if "monthly_usage" not in st.session_state:
+    st.session_state.monthly_usage = cost_tracker.get_monthly_usage()
+
 # --- Load initial data ---
-if "batch_results_df" not in st.session_state and os.path.exists("batch_results.csv"):
-    st.session_state.batch_results_df = pd.read_csv("batch_results.csv")
 
 
 # --- Analytics Dashboard Tabs ---
@@ -32,11 +36,11 @@ with tab3:
 
     # Load data from session state if available, otherwise from file or simulation
     if "batch_results_df" in st.session_state:
-        st.write("Using data from session state.")
         df = st.session_state.batch_results_df
     elif os.path.exists("batch_results.csv"):
-        st.write("Using data from batch_results.csv.")
         df = pd.read_csv("batch_results.csv")
+        st.session_state.batch_results_df = df  # Save to session state
+        df.to_csv("batch_results.csv", index=False)
     else:
         st.write("No batch analysis data found. Showing example data.")
         # Simulated data for demo purposes
@@ -79,10 +83,8 @@ with tab3:
 
 with tab1:
     st.sidebar.title("Budget Tracker")
-    daily_usage = cost_tracker.get_daily_usage()
-    monthly_usage = cost_tracker.get_monthly_usage()
-    st.sidebar.metric(label="Daily Cost", value=f"${daily_usage['cost']:.2f}", delta=f"${cost_tracker.daily_limit - daily_usage['cost']:.2f} remaining")
-    st.sidebar.metric(label="Monthly Cost", value=f"${monthly_usage['cost']:.2f}", delta=f"${cost_tracker.monthly_limit - monthly_usage['cost']:.2f} remaining")
+    st.sidebar.metric(label="Daily Cost", value=f"${st.session_state.daily_usage['cost']:.2f}", delta=f"${cost_tracker.daily_limit - st.session_state.daily_usage['cost']:.2f} remaining")
+    st.sidebar.metric(label="Monthly Cost", value=f"${st.session_state.monthly_usage['cost']:.2f}", delta=f"${cost_tracker.monthly_limit - st.session_state.monthly_usage['cost']:.2f} remaining")
 
     st.title("Enterprise Content Analysis Platform")
 
@@ -144,6 +146,8 @@ with tab1:
                     # Record actual usage
                     if "usage" in analysis:
                         cost_tracker.record_usage(analysis['usage']['prompt_tokens'], analysis['usage']['completion_tokens'])
+                        st.session_state.daily_usage = cost_tracker.get_daily_usage()
+                        st.session_state.monthly_usage = cost_tracker.get_monthly_usage()
                     st.markdown("---")
                     if "error" in analysis:
                         st.error(analysis["error"])
